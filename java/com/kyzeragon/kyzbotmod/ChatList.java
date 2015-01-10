@@ -9,9 +9,9 @@ public class ChatList
 	
 	public ChatList() {}
 	
-	public void addLine(String name, String lowerMessage)
+	public void addLine(String name, String lowerMessage, int listSize)
 	{
-		if (names.size() >= 8)
+		if (names.size() >= listSize)
 		{
 			names.removeLast();
 			messages.removeLast();
@@ -37,7 +37,7 @@ public class ChatList
 			}
 			if (count > 2)
 			{
-				return "/warn " + names.get(0) + " Don't spam chat.";
+				return "/kick " + names.get(0) + " Don't spam chat.";
 			}
 		}
 		return "";

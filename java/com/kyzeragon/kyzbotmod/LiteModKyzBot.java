@@ -2,6 +2,7 @@ package com.kyzeragon.kyzbotmod;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import org.lwjgl.input.Keyboard;
 
@@ -31,8 +32,12 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 	boolean kyzBotOn;
 	boolean displayOn;
 	String lastSay;
+	String kyzBotMode;
+	String kyzBotTest;
 	ChatList chatList;
-	HashMap<String, Boolean> config;
+	String config = "1111111111";
+	LinkedList<String> configItems;
+
 
 	ChatStyle style;
 	ChatComponentText displayMessage;
@@ -42,17 +47,16 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 		this.kyzBotOn = false;
 		this.displayOn = true;
 		this.lastSay = "";
+		this.kyzBotMode = "[NORMAL]";
+		this.kyzBotTest = "";
 		this.chatList = new ChatList();
 		this.style = new ChatStyle();
 		this.style.setColor(EnumChatFormatting.AQUA);
 
-		///// config map /////
-		config = new HashMap<String, Boolean>();
-		String[] configItems = {"adv", "insult", "multispam", "caps", "spam", "lag", "english", "bad", "count", "youtube"};
-		for (String item: configItems)
-		{
-			config.put(item, true);
-		}
+		configItems = new LinkedList<String>();
+		String[] configStrings = {"adv", "insult", "multispam", "caps", "spam", "lag", "english", "bad", "count", "youtube"};
+		for (int i = 0; i < configStrings.length; i++)
+			configItems.add(configStrings[i]);
 	}
 
 	@Override
@@ -79,7 +83,7 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 				toReply = "/m " + words[0].substring(2) + " KyzBot: ON";
 			Minecraft.getMinecraft().thePlayer.sendChatMessage(toReply);
 		}
-		
+
 		///// GLOBAL AND LOCAL CHECKS /////
 		if (this.kyzBotOn && message.length() > 10 && (message.substring(0, 10).equals("§r§8[§r§fG")
 				|| message.substring(0, 10).equals("§r§8[§r§fL")))
@@ -91,25 +95,27 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 				EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
 
 				String adv = "";
-				if (config.get("adv"))
+				if (this.getVal("adv") > 0)
 					adv = this.kyzBot.checkAdv();
 				if (!adv.equals("")) // Check if advertising
-					player.sendChatMessage(adv);
+				{
+					player.sendChatMessage(this.kyzBotTest + adv);
+				}
 				else
 				{
 					String result = this.kyzBot.checkMessage(); // Do most checks
 					if (!result.equals(""))
 					{
-						player.sendChatMessage(result + ".");
+						player.sendChatMessage(this.kyzBotTest + result + ".");
 						if (result.matches(".*ch qm g.*(don't spam|in caps).*"))
 							this.lastSay = this.kyzBot.getPlayer();
 					}
-					else // Check multiline similar message spam
+					else if (this.getVal("multispam") > 0)// Check multiline similar message spam
 					{
 						result = this.chatList.checkSpam();
 						if (!result.equals(""))
 						{
-							player.sendChatMessage(result);
+							player.sendChatMessage(this.kyzBotTest + result);
 						}
 					}
 				}
@@ -147,26 +153,70 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 					this.messageToUser("/kyzbot " + toDisplay[i]);
 				}
 				String configList = "Configurable checks: ";
-				for (String word: config.keySet())
+				for (String word: this.configItems)
 					configList += word + " ";
 				this.messageToUser(configList);
 			}
 			else if (argv[1].equals("list")) // List checks ON/OFF
 			{
-				for (String word: config.keySet())
+				for (String word: this.configItems)
 				{
-					if (config.get(word))
-						this.messageToUser(word + ": ON");
+					if (this.getVal(word) == 1)
+						this.messageToUser(word + ": NORMAL");
+					else if (this.getVal(word) == 2)
+						this.messageToUser(word + ": LENIENT");
 					else
 						this.messageToUser(word + ": OFF");
 				}
 			}
+			else if (argv[1].equals("mode"))
+			{
+				if (argv.length > 2)
+				{
+					if (argv[2].equalsIgnoreCase("normal"))
+					{
+						this.kyzBotMode = "[NORMAL]";
+						this.config = "1111111111";
+					}
+					else if (argv[2].equalsIgnoreCase("lenient"))
+					{
+						this.kyzBotMode = "[LENIENT]";
+						this.config = "2222222222";
+					}
+					else if (argv[2].equalsIgnoreCase("test"))
+					{
+						if (this.kyzBotTest.equals(""))
+							this.kyzBotTest = "/m Kyzer ";
+						else
+							this.kyzBotTest = "";
+					}
+				}
+			}
 			else
 			{
-				if (this.config.containsKey(argv[1]))
+				String word = argv[1];
+				if (this.configItems.contains(word))
 				{
-					this.config.put(argv[1], !this.config.get(argv[1]));
-					this.messageToUser(argv[1] + " toggled.");
+					if (argv.length > 2)
+					{
+						if (argv[2].equalsIgnoreCase("off"))
+							argv[2] = "0";
+						else if (argv[2].equalsIgnoreCase("normal"))
+							argv[2] = "1";
+						else if (argv[2].equalsIgnoreCase("lenient"))
+							argv[2] = "2";
+						if (argv[2].matches("0|1|2"))
+						{
+							int index = this.configItems.indexOf(word);
+							config = config.substring(0, index) + argv[2] + config.substring(index + 1);
+						}
+					}
+					if (this.getVal(word) == 1)
+						this.messageToUser(word + ": NORMAL");
+					else if (this.getVal(word) == 2)
+						this.messageToUser(word + ": LENIENT");
+					else
+						this.messageToUser(word + ": OFF");
 				}
 			}
 		}
@@ -181,8 +231,12 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 			String on = "OFF";
 			if (this.kyzBotOn)
 				on = "ON";
+			String mode = "Mode: " + this.kyzBotMode;
+			if (!this.kyzBotTest.equals(""))
+				mode += " [TEST]";
 			int height = Minecraft.getMinecraft().displayHeight;
-			fontRender.drawStringWithShadow("KyzBot: " + on, 1, height/2 - 10, 0x1FE700);
+			fontRender.drawStringWithShadow("KyzBot: " + on, 1, height/2 - 20, 0x1FE700);
+			fontRender.drawStringWithShadow(mode, 1, height/2 - 10, 0x1FE700);
 		}
 
 	}
@@ -194,4 +248,9 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 		Minecraft.getMinecraft().thePlayer.addChatComponentMessage(displayMessage);
 	}
 
+	private int getVal(String item)
+	{
+		int index = this.configItems.indexOf(item);
+		return Integer.parseInt(config.substring(index, index + 1));
+	}
 }
