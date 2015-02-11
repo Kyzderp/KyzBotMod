@@ -159,7 +159,7 @@ public class KyzBot
 	private void checkLag()
 	{
 		String toCheck = this.lowerText.replaceAll("(i'*m)|i|am|(server'*s*)|wtf|the|tengo|many|so|much|hard|have|dis|this|stupid|dumb|very|is| ", "");
-		if (toCheck.matches("(l+[\\., ?!]*a+[\\., ?!]*g+y*(ing)*[\\., ?!']*)+"))
+		if (toCheck.matches("([\\., ?!;']*l+[\\., ?!]*a+[\\., ?!]*g+y*(ing)*[\\., ?!;']*)+"))
 			this.addWarning("don't complain about lag");
 		return;
 	}

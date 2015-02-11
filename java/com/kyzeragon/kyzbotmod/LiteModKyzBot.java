@@ -13,11 +13,13 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.client.C01PacketChatMessage;
+import net.minecraft.network.play.server.S02PacketChat;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 
+import com.mumfrey.liteloader.ChatFilter;
 import com.mumfrey.liteloader.ChatListener;
 import com.mumfrey.liteloader.OutboundChatListener;
 import com.mumfrey.liteloader.Tickable;
@@ -26,22 +28,30 @@ import com.mumfrey.liteloader.modconfig.ConfigStrategy;
 import com.mumfrey.liteloader.modconfig.ExposableOptions;
 
 @ExposableOptions(strategy = ConfigStrategy.Versioned, filename="kyzbotmod.json")
-public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickable
+public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 {
-	KyzBot kyzBot;
-	boolean kyzBotOn;
-	boolean displayOn;
-	String lastSay;
-	String kyzBotMode;
-	String kyzBotTest;
-	ChatList chatList;
-	String config = "1111111111";
-	LinkedList<String> configItems;
+	
+	private static final boolean useButton = true;
+	// set to " -KyzBot" to append message, or "" for none
+	private static final String appendKyzbot = " -KyzBot";
+	
+	private KyzBot kyzBot;
+	private boolean kyzBotOn;
+	private boolean displayOn;
+	private String lastSay;
+	private String kyzBotMode;
+	private String kyzBotTest;
+	private ChatList chatList;
+	private String config = "1111111111";
+	private LinkedList<String> configItems;
+	//set to true to use kicks, otherwise will use warnings (and banip for adv) 
+	private boolean useKick = true;
+	private boolean sentCmd;
 
+	private ChatStyle style;
+	private ChatComponentText displayMessage;
 
-	ChatStyle style;
-	ChatComponentText displayMessage;
-
+	
 	public LiteModKyzBot()
 	{
 		this.kyzBotOn = false;
@@ -52,6 +62,7 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 		this.chatList = new ChatList();
 		this.style = new ChatStyle();
 		this.style.setColor(EnumChatFormatting.AQUA);
+		this.sentCmd = false;
 
 		configItems = new LinkedList<String>();
 		String[] configStrings = {"adv", "insult", "multispam", "caps", "spam", "lag", "english", "bad", "count", "youtube"};
@@ -63,7 +74,7 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 	public String getName() {return "KyzBot";}
 
 	@Override
-	public String getVersion() {return "0.9.0";}
+	public String getVersion() {return "0.9.2";}
 
 	@Override
 	public void init(File configPath){}
@@ -72,7 +83,14 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 	public void upgradeSettings(String version, File configPath, File oldConfigPath) {}
 
 	@Override
-	public void onChat(IChatComponent chat, String message) {
+	public boolean onChat(S02PacketChat chatPacket, IChatComponent chat, String message) {
+		///// GET RID OF UNKNOWN COMMAND ERROR /////
+		if (message.matches(".*nknown.*ommand.*") && this.sentCmd)
+		{
+			this.sentCmd = false;
+			return false;
+		}
+		
 		///// EXTERNAL CONTROL /////
 		if (message.length() > 10 && message.matches("§r(Kyzer|Flox|EbelAngel|Smokezarn|Jarriey|Noodzz|TalkyAttorney|chewy0ne|FluffBunneh|Mckebab|PyroAries_|Bigbosszee) : /m Kyzeragon /kyzbot toggle§r"))
 		{
@@ -82,14 +100,13 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 			if (this.kyzBotOn)
 				toReply = "/m " + words[0].substring(2) + " KyzBot: ON";
 			Minecraft.getMinecraft().thePlayer.sendChatMessage(toReply);
+			return true;
 		}
 
 		///// GLOBAL AND LOCAL CHECKS /////
-		if (this.kyzBotOn && message.length() > 10 && (message.substring(0, 10).equals("§r§8[§r§fG")
-				|| message.substring(0, 10).equals("§r§8[§r§fL")))
+		if (this.kyzBotOn && message.matches("§r§8\\[§r§f[GL].*"))
 		{
-			if (!(message.contains("§r§8[§r§eMod") || message.contains("§r§8[§r§bAssist")
-					|| message.contains("§r§8[§r§6Dev") || message.contains("§r§8[§r§6Admin")))
+			if (!message.matches(".*§r§8\\[§r(§eMod|§bAssist|§6Dev|§6Admin).*"))
 			{
 				this.kyzBot = new KyzBot(message.replaceAll("§", "&"), this.chatList, this.config, this.lastSay);
 				EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
@@ -99,14 +116,18 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 					adv = this.kyzBot.checkAdv();
 				if (!adv.equals("")) // Check if advertising
 				{
-					player.sendChatMessage(this.kyzBotTest + adv);
+					if (this.useKick)
+						adv = adv.replaceAll("banip", "kick") + ", ban incoming.";
+					player.sendChatMessage(this.kyzBotTest + adv + this.appendKyzbot);
 				}
 				else
 				{
 					String result = this.kyzBot.checkMessage(); // Do most checks
 					if (!result.equals(""))
 					{
-						player.sendChatMessage(this.kyzBotTest + result + ".");
+						if (this.useKick)
+							result = result.replaceAll("warn", "kick");
+						player.sendChatMessage(this.kyzBotTest + result + "." + this.appendKyzbot);
 						if (result.matches(".*ch qm g.*(don't spam|in caps).*"))
 							this.lastSay = this.kyzBot.getPlayer();
 					}
@@ -115,20 +136,24 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 						result = this.chatList.checkSpam();
 						if (!result.equals(""))
 						{
-							player.sendChatMessage(this.kyzBotTest + result);
+							if (this.useKick)
+								result = result.replaceAll("warn", "kick");
+							player.sendChatMessage(this.kyzBotTest + result + this.appendKyzbot);
 						}
 					}
 				}
 			}
 		}
+		return true;
 	}
 
 	@Override
+	// see https://github.com/totemo/watson/blob/0.7.0-1.7.2_02/src/watson/LiteModWatson.java
 	public void onSendChatMessage(C01PacketChatMessage packet, String message) {
 		String[] argv = message.toLowerCase().split(" ");
-		if (argv[0].equals("/kyzbot"))
+		if (argv[0].equalsIgnoreCase("/kyzbot") || argv[0].equalsIgnoreCase("/kb"))
 		{
-			// TODO: find some way to cancel chat packet?	
+			this.sentCmd = true;
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 			if (argv.length == 1) // toggles kyzbot ON/OFF
 			{
@@ -147,7 +172,8 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 			{
 				this.messageToUser("KyzBot v0.9.0 Usage:");
 				String[] toDisplay = {"display - toggle ON/OFF display", "help - this usage message", 
-						"list - list of checks", "[check] - toggle specified check"};
+						"list - list of checks", "[check] - toggle specified check",
+						"mode - normal, lenient, test, kick, warn"};
 				for (int i = 0; i < toDisplay.length; i++)
 				{
 					this.messageToUser("/kyzbot " + toDisplay[i]);
@@ -190,6 +216,16 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 						else
 							this.kyzBotTest = "";
 					}
+					else if (argv[2].equalsIgnoreCase("kick"))
+					{
+						this.useKick = true;
+						this.messageToUser("KyzBot: Using /kick");
+					}
+					else if (argv[2].equalsIgnoreCase("warn"))
+					{
+						this.useKick = false;
+						this.messageToUser("KyzBot: Using /warn");
+					}
 				}
 			}
 			else
@@ -231,6 +267,10 @@ public class LiteModKyzBot implements ChatListener, OutboundChatListener, Tickab
 			String on = "OFF";
 			if (this.kyzBotOn)
 				on = "ON";
+			if (this.useKick)
+				on += " [KICK]";
+			else
+				on += " [WARN]";
 			String mode = "Mode: " + this.kyzBotMode;
 			if (!this.kyzBotTest.equals(""))
 				mode += " [TEST]";
