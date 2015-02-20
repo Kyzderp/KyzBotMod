@@ -112,7 +112,7 @@ public class KyzBot
 	{
 		// catch multiple of same word spam, has to match with second word tho
 		// TODO: possibly all words? more intensive...
-		String[] strippedWords = this.lowerText.replaceAll("[\\.,?!@#$%^&]", "").split(" ");
+		String[] strippedWords = this.lowerText.replaceAll("[\\(\\)\\.,?!@#$%^&]", "").split(" ");
 		if (strippedWords.length >= 4)
 		{
 			int count = 0;
@@ -168,7 +168,7 @@ public class KyzBot
 	{
 		//TODO: add more keywords
 		String spanish = ".*(espada|armadura|vamos|soy nuev|(algu?i?en)|donde est|juegos|tengo|ayudame|quien habl|como est|mierda).*";
-		String something = ".*(alguem|beyler|olan var|esti roma|unde esti|magyar|hrvat|gelirim|kann ich|(t.?rk var ?m)|(t.?rk olan)|ceza |yiycem|e konu|nerdes|arkada|eu sunt|sunt roma|yazd.?m).*";
+		String something = ".*(alguem|beyler|olan var|esti roma|unde esti|magyar|hrvat|gelirim|kann ich|(t.?rk var ?m)|(t.?rk olan)|ceza |yiycem|e konu|nerdes|arkada|eu sunt|sunt roma|yazd.?m| ima li |srbije|burday.?m).*";
 		if (this.lowerText.matches(spanish))
 			this.addWarning("solamente Ingles en global chat");
 		else if (this.lowerText.matches(something))
