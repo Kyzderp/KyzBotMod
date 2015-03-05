@@ -99,7 +99,7 @@ public class KyzBot
 			return;
 		if (numLetters >= 17)
 			this.addWarning("don't type in caps");
-		else if (this.getVal("caps") == 1 && numLetters >= 10)
+		else if (this.getVal("caps") == 1 && numLetters >= 12)
 		{
 			if (this.lastSay.equals(this.player))
 				this.addWarning("don't type in caps");
@@ -112,18 +112,25 @@ public class KyzBot
 	{
 		// catch multiple of same word spam, has to match with second word tho
 		// TODO: possibly all words? more intensive...
-		String[] strippedWords = this.lowerText.replaceAll("[\\(\\)\\.,?!@#$%^&]", "").split(" ");
+		// TODO: only if they're in sequence
+		String[] strippedWords = this.lowerText.replaceAll("[\\(\\)\\.,?!@#$%^&]", " ").split(" ");
 		if (strippedWords.length >= 4)
 		{
 			int count = 0;
+			String currentWord = strippedWords[0];
 			for (int i = 0; i < strippedWords.length; i++)
 			{
-				if (strippedWords[i].equals(strippedWords[1]))
+				if (strippedWords[i].equals(currentWord))
 					count++;
+				else
+				{
+					currentWord = strippedWords[i];
+					count = 1;
+				}
 			}
 			if (count >= 4)
 			{
-				this.addWarning("don't spam");
+				this.addWarning("don't spam words");
 				return;
 			}
 		}

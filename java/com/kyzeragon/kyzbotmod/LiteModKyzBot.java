@@ -74,7 +74,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	public String getName() {return "KyzBot";}
 
 	@Override
-	public String getVersion() {return "0.9.2";}
+	public String getVersion() {return "1.0.0";}
 
 	@Override
 	public void init(File configPath){}
@@ -117,7 +117,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 				if (!adv.equals("")) // Check if advertising
 				{
 					if (this.useKick)
-						adv = adv.replaceAll("banip", "kick") + ", ban incoming.";
+						adv = adv.replaceAll("banip", "kick"); //+ ", ban incoming.";
 					player.sendChatMessage(this.kyzBotTest + adv + this.appendKyzbot);
 				}
 				else
