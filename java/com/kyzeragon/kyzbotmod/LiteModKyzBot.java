@@ -30,11 +30,11 @@ import com.mumfrey.liteloader.modconfig.ExposableOptions;
 @ExposableOptions(strategy = ConfigStrategy.Versioned, filename="kyzbotmod.json")
 public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 {
-	
+
 	private static final boolean useButton = true;
 	// set to " -KyzBot" to append message, or "" for none
 	private static final String appendKyzbot = " -KyzBot";
-	
+
 	private KyzBot kyzBot;
 	private boolean kyzBotOn;
 	private boolean displayOn;
@@ -51,7 +51,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	private ChatStyle style;
 	private ChatComponentText displayMessage;
 
-	
+
 	public LiteModKyzBot()
 	{
 		this.kyzBotOn = false;
@@ -74,7 +74,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	public String getName() {return "KyzBot";}
 
 	@Override
-	public String getVersion() {return "1.0.0";}
+	public String getVersion() {return "1.0.1";}
 
 	@Override
 	public void init(File configPath){}
@@ -90,7 +90,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 			this.sentCmd = false;
 			return false;
 		}
-		
+
 		///// EXTERNAL CONTROL /////
 		if (message.length() > 10 && message.matches("§r(Kyzer|Flox|EbelAngel|Smokezarn|Jarriey|Noodzz|TalkyAttorney|chewy0ne|FluffBunneh|Mckebab|PyroAries_|Bigbosszee) : /m Kyzeragon /kyzbot toggle§r"))
 		{
@@ -157,12 +157,17 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 			if (argv.length == 1) // toggles kyzbot ON/OFF
 			{
-				this.kyzBotOn = !this.kyzBotOn;
-
-				if (kyzBotOn)
-					this.messageToUser("KyzBot: ON");
-				else
-					this.messageToUser("KyzBot: OFF");
+				this.messageToUser("KyzBot [v" + this.getVersion() + "]");
+			}
+			else if (argv[1].equalsIgnoreCase("on"))
+			{
+				this.kyzBotOn = true;
+				this.messageToUser("KyzBot: ON");
+			}
+			else if (argv[1].equalsIgnoreCase("off"))
+			{
+				this.kyzBotOn = false;
+				this.messageToUser("KyzBot: OFF");
 			}
 			else if (argv[1].equals("display")) // toggles display on bottom right
 			{
@@ -173,7 +178,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 				this.messageToUser("KyzBot v0.9.0 Usage:");
 				String[] toDisplay = {"display - toggle ON/OFF display", "help - this usage message", 
 						"list - list of checks", "[check] - toggle specified check",
-						"mode - normal, lenient, test, kick, warn"};
+				"mode - normal, lenient, test, kick, warn"};
 				for (int i = 0; i < toDisplay.length; i++)
 				{
 					this.messageToUser("/kyzbot " + toDisplay[i]);

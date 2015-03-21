@@ -147,7 +147,7 @@ public class KyzBot
 				System.out.println(words[i]);
 				return;
 			}
-			else if (this.getVal("spam") == 1 && words[i].length() > 7)
+			else if (this.getVal("spam") == 1 && words[i].length() > 9)
 			{
 				char letter = words[i].charAt(1);
 				for (int j = 2; j < words[i].length() - 1; j++)
