@@ -7,6 +7,7 @@ import org.apache.logging.log4j.core.helpers.Strings;
 
 public class KyzBot 
 {
+	String channel;
 	String text;
 	String lowerText;
 	String player;
@@ -18,7 +19,7 @@ public class KyzBot
 	String config;
 	LinkedList<String> configItems;
 
-	public KyzBot (String message, ChatList chatList, String config, String lastSay)
+	public KyzBot (String message, ChatList chatList, String config, String lastSay, String channel)
 	{
 		///// PLAYER /////
 		int playerBegin = message.indexOf("[&r&a");
@@ -27,6 +28,8 @@ public class KyzBot
 
 		///// TEXT /////
 		int textBegin = message.indexOf(" &r&f");
+		if (channel.equals("help"))
+			textBegin = message.indexOf(" &r&c");
 		this.text = "";
 		if (textBegin > 0)
 		{
@@ -43,12 +46,15 @@ public class KyzBot
 		this.warn = this.originalWarn;
 
 		///// MISC /////
+		this.channel = channel;
 		this.config = config;
 		this.lastSay = lastSay;
 		configItems = new LinkedList<String>();	
 		String[] configStrings = {"adv", "insult", "multispam", "caps", "spam", "lag", "english", "bad", "count", "youtube"};
 		for (int i = 0; i < configStrings.length; i++)
 			configItems.add(configStrings[i]);
+		
+		System.out.println("Channel: " + this.channel + " lowerText: " + this.lowerText);
 		
 		if (this.getVal("multispam") == 1)
 			chatList.addLine(this.player, this.lowerText, 8);
@@ -60,18 +66,17 @@ public class KyzBot
 	{
 		System.out.println(this.text);
 		
-		if (this.getVal("caps") > 0)
-			this.checkCaps();
+		
 		if (this.getVal("spam") > 0)
 			this.checkSpam();
 		if (this.getVal("lag") > 0)
 			this.checkLag();
 		if (this.getVal("english") > 0)
 			this.checkEnglish();
+		if (this.getVal("caps") > 0)
+			this.checkCaps();
 		if (this.getVal("bad") > 0)
 			this.checkBad();
-		if (this.getVal("count") > 0)
-			this.checkCount();
 		if (this.getVal("youtube") > 0)
 			this.checkYoutube();
 
@@ -97,7 +102,9 @@ public class KyzBot
 		}
 		if (numCaps < numLetters * 0.7) // 70%+ caps will get punishment
 			return;
-		if (numLetters >= 17)
+		if (numLetters >= 12 && this.warn.matches(".*ingles.*"))
+			this.addWarning("no usa mayusculas");
+		else if (numLetters >= 17)
 			this.addWarning("don't type in caps");
 		else if (this.getVal("caps") == 1 && numLetters >= 12)
 		{
@@ -110,10 +117,7 @@ public class KyzBot
 
 	private void checkSpam()
 	{
-		// catch multiple of same word spam, has to match with second word tho
-		// TODO: possibly all words? more intensive...
-		// TODO: only if they're in sequence
-		String[] strippedWords = this.lowerText.replaceAll("[\\(\\)\\.,?!@#$%^&]", " ").split(" ");
+		String[] strippedWords = this.lowerText.replaceAll("§.?", "").replaceAll("[\\(\\)\\.,?!@#$%^&]", " ").split(" ");
 		if (strippedWords.length >= 4)
 		{
 			int count = 0;
@@ -140,8 +144,8 @@ public class KyzBot
 		{
 			int offset = 0;
 			if (this.getVal("spam") == 2)
-				offset = 8;
-			if (words[i].length() > 17 + offset && !words[i].toLowerCase().contains("teamextrememc.com"))
+				offset = 8; //thediamondminecart
+			if (words[i].length() > 19 + offset && !words[i].toLowerCase().contains("teamextrememc.com"))
 			{
 				this.addWarning("don't spam");
 				System.out.println(words[i]);
@@ -174,24 +178,23 @@ public class KyzBot
 	private void checkEnglish()
 	{
 		//TODO: add more keywords
-		String spanish = ".*(espada|armadura|vamos|soy nuev|(algu?i?en)|donde est|juegos|tengo|ayudame|quien habl|como est|mierda).*";
+		String spanish = ".*(estoy|espada|armadura|vamos|soy nuev|(algu?i?en)|donde est|juegos|tengo|ayudame|quien habl|como est|mierda).*";
 		String something = ".*(alguem|beyler|olan var|esti roma|unde esti|magyar|hrvat|gelirim|kann ich|(t.?rk var ?m)|(t.?rk olan)|ceza |yiycem|e konu|nerdes|arkada|eu sunt|sunt roma|yazd.?m| ima li |srbije|burday.?m).*";
 		if (this.lowerText.matches(spanish))
-			this.addWarning("solamente Ingles en global chat");
+		{
+			if (this.channel.equals("global"))
+				this.addWarning("solamente Ingles en global chat");
+			else
+				this.addWarning("English in " + this.channel + " chat");
+		}
 		else if (this.lowerText.matches(something))
-			this.addWarning("English in global chat");
+			this.addWarning("English in " + this.channel + " chat");
 	}
 
 	private void checkBad()
 	{
 		if (this.lowerText.matches(".*(nigga|nigger).*"))
 			this.addWarning("not appropriate");
-	}
-
-	private void checkCount()
-	{
-		// TODO: counting up
-		// TODO: countdown
 	}
 
 	private void checkYoutube()
