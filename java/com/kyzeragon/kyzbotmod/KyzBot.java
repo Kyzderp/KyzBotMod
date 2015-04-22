@@ -186,14 +186,14 @@ public class KyzBot
 		String something = ConfigFile.language;
 		if (something.equals(""))
 			something = ".*(alguem|beyler|olan var|esti roma|unde esti|magyar|hrvat|gelirim|kann ich|(t.?rk var ?m)|(t.?rk olan)|ceza |yiycem|e konu|nerdes|arkada|eu sunt|sunt roma|yazd.?m| ima li |srbije|burday.?m).*";
-		if (this.lowerText.matches(spanish))
+		if ((" " + this.lowerText + " ").matches(spanish))
 		{
 			if (this.channel.equals("global"))
 				this.addWarning("solamente Ingles en global chat");
 			else
 				this.addWarning("English in " + this.channel + " chat");
 		}
-		else if (this.lowerText.matches(something))
+		else if ((" " + this.lowerText + " ").matches(something))
 			this.addWarning("English in " + this.channel + " chat");
 	}
 
