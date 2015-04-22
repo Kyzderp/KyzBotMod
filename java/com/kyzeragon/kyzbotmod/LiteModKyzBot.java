@@ -49,10 +49,6 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	private boolean useKick = true;
 	private boolean sentCmd;
 
-	private ChatStyle style;
-	private ChatComponentText displayMessage;
-
-
 	public LiteModKyzBot()
 	{
 		this.configFile = new ConfigFile();
@@ -62,8 +58,6 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 		this.kyzBotMode = "[NORMAL]";
 		this.kyzBotTest = "";
 		this.chatList = new ChatList();
-		this.style = new ChatStyle();
-		this.style.setColor(EnumChatFormatting.AQUA);
 		this.sentCmd = false;
 
 		configItems = new LinkedList<String>();
@@ -76,7 +70,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	public String getName() {return "KyzBot";}
 
 	@Override
-	public String getVersion() {return "1.2.0";}
+	public String getVersion() {return "1.2.1";}
 
 	@Override
 	public void init(File configPath){}
