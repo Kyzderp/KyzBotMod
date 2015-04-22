@@ -36,6 +36,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	private static final String appendKyzbot = " -KyzBot";
 
 	private KyzBot kyzBot;
+	private ConfigFile configFile;
 	private boolean kyzBotOn;
 	private boolean displayOn;
 	private String lastSay;
@@ -54,6 +55,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 
 	public LiteModKyzBot()
 	{
+		this.configFile = new ConfigFile();
 		this.kyzBotOn = false;
 		this.displayOn = true;
 		this.lastSay = "";
@@ -74,7 +76,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	public String getName() {return "KyzBot";}
 
 	@Override
-	public String getVersion() {return "1.1.0";}
+	public String getVersion() {return "1.2.0";}
 
 	@Override
 	public void init(File configPath){}
@@ -113,7 +115,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 				channel = "help";
 			else if (ch == 'T')
 				channel = "trade";
-			
+
 			this.kyzBot = new KyzBot(message.replaceAll("§", "&"), this.chatList, this.config, this.lastSay, channel);
 			EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
 
@@ -162,17 +164,17 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 			if (argv.length == 1) // toggles kyzbot ON/OFF
 			{
-				this.logMessage("KyzBot [v" + this.getVersion() + "]");
+				this.logMessage("KyzBot [v" + this.getVersion() + "]", false);
 			}
 			else if (argv[1].equalsIgnoreCase("on"))
 			{
 				this.kyzBotOn = true;
-				this.logMessage("KyzBot: ON");
+				this.logMessage("ON", true);
 			}
 			else if (argv[1].equalsIgnoreCase("off"))
 			{
 				this.kyzBotOn = false;
-				this.logMessage("KyzBot: OFF");
+				this.logMessage("OFF", true);
 			}
 			else if (argv[1].equals("display")) // toggles display on bottom right
 			{
@@ -180,29 +182,30 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 			}
 			else if (argv[1].equals("help")) // Prints usage
 			{
-				this.logMessage("KyzBot v0.9.0 Usage:");
+				this.logMessage("KyzBot v0.9.0 Usage:", false);
 				String[] toDisplay = {"display - toggle ON/OFF display", "help - this usage message", 
 						"list - list of checks", "[check] - toggle specified check",
-				"mode - normal, lenient, test, kick, warn"};
+						"mode - normal, lenient, test, kick, warn",
+				"reload - reloads the configuration from file"};
 				for (int i = 0; i < toDisplay.length; i++)
 				{
-					this.logMessage("/kyzbot " + toDisplay[i]);
+					this.logMessage("/kyzbot " + toDisplay[i], false);
 				}
 				String configList = "Configurable checks: ";
 				for (String word: this.configItems)
 					configList += word + " ";
-				this.logMessage(configList);
+				this.logMessage(configList, false);
 			}
 			else if (argv[1].equals("list")) // List checks ON/OFF
 			{
 				for (String word: this.configItems)
 				{
 					if (this.getVal(word) == 1)
-						this.logMessage(word + ": NORMAL");
+						this.logMessage(word + ": NORMAL", false);
 					else if (this.getVal(word) == 2)
-						this.logMessage(word + ": LENIENT");
+						this.logMessage(word + ": LENIENT", false);
 					else
-						this.logMessage(word + ": OFF");
+						this.logMessage(word + ": OFF", false);
 				}
 			}
 			else if (argv[1].equals("mode"))
@@ -213,13 +216,13 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 					{
 						this.kyzBotMode = "[NORMAL]";
 						this.config = "1111111111";
-						this.logMessage("Using normal mode");
+						this.logMessage("Using normal mode", true);
 					}
 					else if (argv[2].equalsIgnoreCase("lenient"))
 					{
 						this.kyzBotMode = "[LENIENT]";
 						this.config = "2222222222";
-						this.logMessage("Using lenient mode");
+						this.logMessage("Using lenient mode", true);
 					}
 					else if (argv[2].equalsIgnoreCase("test"))
 					{
@@ -227,19 +230,27 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 							this.kyzBotTest = "/m Kyzer ";
 						else
 							this.kyzBotTest = "";
-						this.logMessage("Toggled test mode");
+						this.logMessage("Toggled test mode", true);
 					}
 					else if (argv[2].equalsIgnoreCase("kick"))
 					{
 						this.useKick = true;
-						this.logMessage("KyzBot: Using /kick");
+						this.logMessage("Using /kick", true);
 					}
 					else if (argv[2].equalsIgnoreCase("warn"))
 					{
 						this.useKick = false;
-						this.logMessage("KyzBot: Using /warn");
+						this.logMessage("Using /warn", true);
 					}
 				}
+			}
+			else if (argv[1].equalsIgnoreCase("reload"))
+			{
+				this.logMessage("Reloading configuration file...", true);
+				if (this.configFile.loadFile())
+					this.logMessage("Configuration file successfully loaded.", true);
+				else
+					this.logError("Cannot load configuration file!");
 			}
 			else
 			{
@@ -261,11 +272,11 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 						}
 					}
 					if (this.getVal(word) == 1)
-						this.logMessage(word + ": NORMAL");
+						this.logMessage(word + ": NORMAL", true);
 					else if (this.getVal(word) == 2)
-						this.logMessage(word + ": LENIENT");
+						this.logMessage(word + ": LENIENT", true);
 					else
-						this.logMessage(word + ": OFF");
+						this.logMessage(word + ": OFF", true);
 				}
 			}
 		}
@@ -299,14 +310,16 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 		int index = this.configItems.indexOf(item);
 		return Integer.parseInt(config.substring(index, index + 1));
 	}
-	
+
 	/**
 	 * Logs the message to the user
 	 * @param message The message to log
 	 */
-	public static void logMessage(String message)
+	public static void logMessage(String message, boolean addPrefix)
 	{// "§8[§2FMO§8] §a" + 
-		ChatComponentText displayMessage = new ChatComponentText("§8[§2Kyzbot§8] §a" + message);
+		if (addPrefix)
+			message = "§8[§2Kyzbot§8] §a" + message;
+		ChatComponentText displayMessage = new ChatComponentText(message);
 		displayMessage.setChatStyle((new ChatStyle()).setColor(EnumChatFormatting.GREEN));
 		Minecraft.getMinecraft().thePlayer.addChatComponentMessage(displayMessage);
 	}
