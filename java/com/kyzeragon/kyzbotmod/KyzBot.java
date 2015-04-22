@@ -101,7 +101,7 @@ public class KyzBot
 		}
 		if (numCaps < numLetters * 0.7) // 70%+ caps will get punishment
 			return;
-		if (numLetters >= 12 && this.warn.matches(".*ingles.*"))
+		if (this.warn.matches(".*ingles.*") && numLetters >= 12)
 			this.addWarning("no usa mayusculas");
 		else if (numLetters >= 17)
 			this.addWarning("don't type in caps");
