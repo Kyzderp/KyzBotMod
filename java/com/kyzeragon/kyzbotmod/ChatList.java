@@ -26,7 +26,7 @@ public class ChatList
 		int lineCount = 0;
 		int lastNum = Integer.MAX_VALUE;
 		int numCount = Integer.MAX_VALUE;
-		if (messages.get(0).matches("-?[0-9]+"))
+		if (messages.get(0).matches("-?[0-9]+") && messages.get(0).length() < 5)
 		{
 			lastNum = Integer.parseInt(messages.get(0));
 			numCount = 0;

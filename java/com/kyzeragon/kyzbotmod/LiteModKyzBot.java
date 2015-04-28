@@ -70,7 +70,7 @@ public class LiteModKyzBot implements ChatFilter, OutboundChatListener, Tickable
 	public String getName() {return "KyzBot";}
 
 	@Override
-	public String getVersion() {return "1.2.2";}
+	public String getVersion() {return "1.2.4";}
 
 	@Override
 	public void init(File configPath){}
