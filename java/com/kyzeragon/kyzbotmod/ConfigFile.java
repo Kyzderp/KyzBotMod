@@ -66,7 +66,6 @@ public class ConfigFile
 		while (scan.hasNext())
 		{
 			String line = scan.nextLine();
-//			System.out.println(line);
 			if (line.matches("spanish=.*"))
 				spanish = line.replaceFirst("spanish=", "");
 			else if (line.matches("lag=.*"))

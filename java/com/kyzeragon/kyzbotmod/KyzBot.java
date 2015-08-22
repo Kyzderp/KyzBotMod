@@ -54,7 +54,6 @@ public class KyzBot
 		for (int i = 0; i < configStrings.length; i++)
 			configItems.add(configStrings[i]);
 		
-//		System.out.println("Channel: " + this.channel + " lowerText: " + this.lowerText);
 		
 		if (this.getVal("multispam") == 1)
 			chatList.addLine(this.player, this.lowerText, 8);
@@ -64,9 +63,6 @@ public class KyzBot
 
 	public String checkMessage()
 	{
-		System.out.println(this.text);
-		
-		
 		if (this.getVal("spam") > 0)
 			this.checkSpam();
 		if (this.getVal("lag") > 0)
@@ -147,7 +143,6 @@ public class KyzBot
 			if (words[i].length() > 19 + offset && !words[i].toLowerCase().contains("teamextrememc.com"))
 			{
 				this.addWarning("don't spam");
-				System.out.println(words[i]);
 				return;
 			}
 			else if (this.getVal("spam") == 1 && words[i].length() > 9)
@@ -170,7 +165,7 @@ public class KyzBot
 	{
 		String lagStrip = ConfigFile.lag;
 		if (lagStrip.equals(""))
-			lagStrip = "(i'*m)|i|am|(server'*s*)|wtf|the|tengo|many|so|much|hard|have|dis|this|stupid|dumb|very|is| ";
+			lagStrip = "(i'*m)|i|am|(server'*s*)|wtf|the|tengo|many|real|so|much|hard|have|dis|this|stupid|dumb|very|is| ";
 		String toCheck = this.lowerText.replaceAll(lagStrip, "");
 		if (toCheck.matches("([\\., ?!;']*l+[\\., ?!]*a+[\\., ?!]*g+y*(ing)*[\\., ?!;']*)+"))
 			this.addWarning("don't complain about lag");
